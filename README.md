@@ -1,2 +1,2 @@
 # r_udp
-Faculty project from computer networks, task is to make reliable udp protocol
+Faculty project from computer networks class, task is to implement a reliable udp protocol
