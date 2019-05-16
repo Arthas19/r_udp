@@ -5,8 +5,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#include <time.h>
-#include <netinet/in.h>
+#include <unistd.h>
 
 #define BUF 512
 
@@ -18,11 +17,14 @@ static sem_t semaphore;
 static pthread_mutex_t mutex;
 static pthread_t h_wire, h_wireless;
 
-static int i = 0;
+static int i_packet = 0;
 
-int pick_interface(pcap_if_t* device);
+
+/* Functions used */
 void* wire(void *param);
 void* wireless(void *param);
+int select_device(pcap_if_t* device);
+
 
 int main() {
 
@@ -76,7 +78,7 @@ void* wire(void *param) {
 		printf("%s\n", "Greska wire");
 		sem_post(&semaphore);
 
-		return;
+		return NULL;
 	}
 
 	printf("SELECTED: %s\n\n", device->name);
@@ -96,14 +98,16 @@ void* wireless(void *param) {
 		printf("%s\n", "Greska wireless");
 		sem_post(&semaphore);
 
-		return;
+		return NULL;
 	}
+
+	printf("%s\n", "OVDE PUCAM");
 
 	printf("SELECTED: %s\n\n", device->name);
 
 	sem_post(&semaphore);
 
-	return;
+	return NULL;
 }
 
 // This function provide possibility to chose device from the list of available devices
