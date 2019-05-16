@@ -70,31 +70,40 @@ int main() {
 
 void* wire(void *param) {
 	pcap_if_t* device;
+	pcap_t* device_handle;
 
-	if ( select_device(&device) == -1 ) {
+	if ( select_device(device) == -1 ) {
 		printf("%s\n", "Greska wire");
+		sem_post(&semaphore);
+
 		return;
 	}
+
+	printf("SELECTED: %s\n\n", device->name);
 
 	sem_post(&semaphore);
 	sleep(1);
 	sem_wait(&semaphore);
-
-	printf("%s\n", "World");
 }
 
 void* wireless(void *param) {
 	pcap_if_t* device;
+	pcap_t* device_handle;
 
 	sem_wait(&semaphore);
 
-	if ( select_device(&device) == -1 ) {
+	if ( select_device(device) == -1 ) {
 		printf("%s\n", "Greska wireless");
+		sem_post(&semaphore);
+
 		return;
 	}
 
+	printf("SELECTED: %s\n\n", device->name);
+
 	sem_post(&semaphore);
-	printf("%s ", "Hello");
+
+	return;
 }
 
 // This function provide possibility to chose device from the list of available devices
@@ -111,7 +120,7 @@ int select_device(pcap_if_t* device) {
 	}
 
     // Print the list
-    for(device=devices; device; device=device->next) {
+    for (device=devices; device; device=device->next) {
         printf("%d. %s", ++i, device->name);
         if (device->description)
             printf(" (%s)\n", device->description);
@@ -119,17 +128,16 @@ int select_device(pcap_if_t* device) {
             printf(" (No description available)\n");
     }
 
-    if(i==0) {
+    if (i==0) {
         printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
         return -1;
     }
 
 	// Pick one device from the list
-    printf("Enter the interface number (1-%d):",i);
+    printf("Enter the interface number (1-%d):", i);
     scanf("%d", &device_num);
 
-    if(device_num < 1 || device_num > i)
-    {
+    if(device_num < 1 || device_num > i) {
         printf("\nInterface number out of range.\n");
         return -1;
     }
