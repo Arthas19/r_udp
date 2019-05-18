@@ -23,7 +23,7 @@ static int i_packet = 0;
 /* Functions used */
 void* wire(void *param);
 void* wireless(void *param);
-int select_device(pcap_if_t* device);
+pcap_if_t* select_device(pcap_if_t* devices);
 
 
 int main() {
@@ -71,11 +71,23 @@ int main() {
 }
 
 void* wire(void *param) {
-	pcap_if_t* device;
 	pcap_t* device_handle;
+	pcap_if_t *device, *devices;
 
-	if ( select_device(device) == -1 ) {
-		printf("%s\n", "Greska wire");
+	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
+
+	if(pcap_findalldevs(&devices, error_buffer) == -1)
+	{
+		printf("Error in pcap_findalldevs: %s\n", error_buffer);
+		return NULL;
+	}
+
+	printf("%s\n", "WIRE:");
+
+	device = select_device(devices);
+
+	if (device == NULL) {
+		pcap_freealldevs(devices);
 		sem_post(&semaphore);
 
 		return NULL;
@@ -89,19 +101,30 @@ void* wire(void *param) {
 }
 
 void* wireless(void *param) {
-	pcap_if_t* device;
 	pcap_t* device_handle;
+	pcap_if_t *device, *devices;
+
+	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
+
 
 	sem_wait(&semaphore);
 
-	if ( select_device(device) == -1 ) {
-		printf("%s\n", "Greska wireless");
-		sem_post(&semaphore);
+	if(pcap_findalldevs(&devices, error_buffer) == -1) {
+		printf("Error in pcap_findalldevs: %s\n", error_buffer);
 
 		return NULL;
 	}
 
-	printf("%s\n", "OVDE PUCAM");
+	printf("%s\n", "WIRELESS:");
+
+	device = select_device(devices);
+
+	if (device == NULL) {
+		pcap_freealldevs(devices);
+		sem_post(&semaphore);
+
+		return NULL;
+	}
 
 	printf("SELECTED: %s\n\n", device->name);
 
@@ -111,17 +134,10 @@ void* wireless(void *param) {
 }
 
 // This function provide possibility to chose device from the list of available devices
-int select_device(pcap_if_t* device) {
+pcap_if_t* select_device(pcap_if_t* devices) {
 	int i=0;	// Count devices and provide jumping to the selected device
 	int device_num;
-	pcap_if_t* devices;
-	char error_buffer[BUF];
-
-	/* Retrieve the device list on the local machine */
-	if (pcap_findalldevs(&devices, error_buffer) == -1) {
-		printf("Error in pcap_findalldevs: %s\n", error_buffer);
-		return -1;
-	}
+	pcap_if_t* device;
 
     // Print the list
     for (device=devices; device; device=device->next) {
@@ -134,7 +150,7 @@ int select_device(pcap_if_t* device) {
 
     if (i==0) {
         printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
-        return -1;
+        return NULL;
     }
 
 	// Pick one device from the list
@@ -143,11 +159,11 @@ int select_device(pcap_if_t* device) {
 
     if(device_num < 1 || device_num > i) {
         printf("\nInterface number out of range.\n");
-        return -1;
+        return NULL;
     }
 
      // Jump to the selected device
     for(device = devices, i = 0; i < device_num-1; device=device->next, i++);
 
-	return 0;
+	return device;
 }
