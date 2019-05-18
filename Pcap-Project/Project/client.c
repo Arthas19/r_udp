@@ -98,6 +98,22 @@ void* wire(void *param) {
 	sem_post(&semaphore);
 	sleep(1);
 	sem_wait(&semaphore);
+
+	// Open the capture device
+	if ((device_handle = pcap_open_live( device->name,		// name of the device
+							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
+							  1,							// promiscuous mode
+							  500,							// read timeout
+							  error_buffer					// buffer where error message is stored
+							  )) == NULL)
+	{
+		printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
+		pcap_freealldevs(devices);
+
+		return NULL;
+	}
+
+	pcap_freealldevs(devices);
 }
 
 void* wireless(void *param) {
@@ -130,7 +146,21 @@ void* wireless(void *param) {
 
 	sem_post(&semaphore);
 
-	return NULL;
+	// Open the capture device
+	if ((device_handle = pcap_open_live( device->name,		// name of the device
+							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
+							  1,							// promiscuous mode
+							  500,							// read timeout
+							  error_buffer					// buffer where error message is stored
+							  )) == NULL)
+	{
+		printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
+		pcap_freealldevs(devices);
+
+		return NULL;
+	}
+
+	pcap_freealldevs(devices);
 }
 
 // This function provide possibility to chose device from the list of available devices
