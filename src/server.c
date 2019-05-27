@@ -1,23 +1,30 @@
-#include <pcap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <pcap.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
 
-#include <unistd.h>
+#include "file_io.c"
+#include "protocol_headers.c"
 
 #define BUF 512
 
-
 /* Global variables */
 static FILE *in_file, *out_file;
+static unsigned char *buffer;
+static size_t size;
 
 static sem_t semaphore;
 static pthread_mutex_t mutex;
 static pthread_t h_wire, h_wireless;
 
 static int i_packet = 0;
+
+/* Protocol based global variables */
+static ethernet_header eh;
 
 
 /* Functions used */
@@ -28,38 +35,11 @@ pcap_if_t* select_device(pcap_if_t* devices);
 
 int main() {
 
-	unsigned char buffer[BUF];
-
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
 
 	pthread_create(&h_wire, NULL, wire, 0);
 	pthread_create(&h_wireless, NULL, wireless, 0);
-
-	if ((in_file = fopen("in_file.png", "rb")) == NULL ) {
-		fprintf(stderr, "%s\n", "Unable to open \"in_file.png\"");
-		return EXIT_FAILURE;
-	}
-
-	if ((out_file = fopen("out_file.png", "wb")) == NULL) {
-		fprintf(stderr, "%s\n", "Unable to open \"out_file.png\"");
-		return EXIT_FAILURE;
-	}
-
-	while ( fread(buffer, BUF, 1, in_file) ) {
-		fwrite(buffer, BUF, 1, out_file);
-		memset(buffer, '\0', BUF);
-	}
-
-	if (fclose(in_file) != 0) {
-		fprintf(stderr, "%s\n", "Unable to close \"i_file.png\"");
-		return EXIT_FAILURE;
-	}
-
-	if (fclose(out_file) != 0) {
-		fprintf(stderr, "%s\n", "Unable to close \"o_file.png\"");
-		return EXIT_FAILURE;
-	}
 
 	pthread_join(h_wire, NULL);
 	pthread_join(h_wireless, NULL);
@@ -67,11 +47,13 @@ int main() {
 	pthread_mutex_destroy(&mutex);
 	sem_destroy(&semaphore);
 
+	free(buffer);
+
 	return EXIT_SUCCESS;
 }
 
 void* wire(void *param) {
-	pcap_t* device_handle;
+	pcap_t* wire_handler;
 	pcap_if_t *device, *devices;
 
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
@@ -90,13 +72,13 @@ void* wire(void *param) {
 		pcap_freealldevs(devices);
 		sem_post(&semaphore);
 
-		return NULL;
+		exit(-1);
 	}
 
 	printf("SELECTED: %s\n\n", device->name);
 
 	// Open the capture device
-    if ((device_handle = pcap_open_live( device->name,		// name of the device
+    if ((wire_handler = pcap_open_live( device->name,		// name of the device
                               65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
                               1,							// promiscuous mode
                               500,							// read timeout
@@ -105,8 +87,8 @@ void* wire(void *param) {
     {
         printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
         pcap_freealldevs(devices);
-		
-        return NULL;
+
+		exit(-1);
     }
 
 	sem_post(&semaphore);
@@ -117,7 +99,7 @@ void* wire(void *param) {
 }
 
 void* wireless(void *param) {
-	pcap_t* device_handle;
+	pcap_t* wireless_handler;
 	pcap_if_t *device, *devices;
 
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
@@ -128,7 +110,7 @@ void* wireless(void *param) {
 	if(pcap_findalldevs(&devices, error_buffer) == -1) {
 		printf("Error in pcap_findalldevs: %s\n", error_buffer);
 
-		return NULL;
+		exit(-1);
 	}
 
 	printf("%s\n", "WIRELESS:");
@@ -147,7 +129,7 @@ void* wireless(void *param) {
 	sem_post(&semaphore);
 
 	// Open the capture device
-	if ((device_handle = pcap_open_live( device->name,		// name of the device
+	if ((wireless_handler = pcap_open_live( device->name,		// name of the device
 							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
 							  1,							// promiscuous mode
 							  500,							// read timeout
@@ -157,7 +139,7 @@ void* wireless(void *param) {
 		printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
 		pcap_freealldevs(devices);
 
-		return NULL;
+		exit(-1);
 	}
 
 	pcap_freealldevs(devices);
@@ -180,7 +162,7 @@ pcap_if_t* select_device(pcap_if_t* devices) {
 
     if (i==0) {
         printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
-        return NULL;
+		exit(-1);
     }
 
 	// Pick one device from the list
@@ -189,7 +171,7 @@ pcap_if_t* select_device(pcap_if_t* devices) {
 
     if(device_num < 1 || device_num > i) {
         printf("\nInterface number out of range.\n");
-        return NULL;
+    	exit(-1);
     }
 
      // Jump to the selected device
