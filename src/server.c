@@ -38,11 +38,30 @@ int main() {
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
 
-	pthread_create(&h_wire, NULL, wire, 0);
-	pthread_create(&h_wireless, NULL, wireless, 0);
+	//pthread_create(&h_wire, NULL, wire, 0);
+	//pthread_create(&h_wireless, NULL, wireless, 0);
 
-	pthread_join(h_wire, NULL);
-	pthread_join(h_wireless, NULL);
+	unsigned char eth_src_addr[6]  = { 0x70, 0x85, 0xc2, 0x65, 0xe5, 0x25 };
+	unsigned char eth_dst_addr[6]  = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
+	unsigned char wlan_src_addr[6] = { 0xec, 0x08, 0x6b, 0x08, 0x52, 0x19 };
+	unsigned char wlan_dst_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
+
+	ethernet_header eh_eth = create_eth_header(eth_src_addr, eth_dst_addr);
+	ethernet_header eh_wlan = create_eth_header(wlan_src_addr, wlan_dst_addr);
+
+	for (int i = 0; i < 6; i++)
+		printf("%x ", eh_eth.src_address[i]);
+
+	puts("");
+
+	for (int i = 0; i < 6; i++)
+		printf("%x ", eh_eth.dest_address[i]);
+
+	puts("");
+
+
+	//pthread_join(h_wire, NULL);
+	//pthread_join(h_wireless, NULL);
 
 	pthread_mutex_destroy(&mutex);
 	sem_destroy(&semaphore);

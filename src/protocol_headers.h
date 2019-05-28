@@ -16,7 +16,9 @@ typedef struct ethernet_header {
 	unsigned short type;				// Type of the next layer
 } ethernet_header;
 
-ethernet_header create_eth_header(unsigned char *src, unsigned char *dest);
+ethernet_header create_eth_header(unsigned char *, unsigned char *);
+
+// -----------------------------------------------------------------------------
 
 // IPv4 header
 typedef struct ip_header {
@@ -35,7 +37,7 @@ typedef struct ip_header {
 	unsigned int options_padding;	// Option + Padding
 		// + variable part of the header
 } ip_header;
-// -----------------------------------------------------------------------------
+
 //UDP header
 typedef struct udp_header {
 	unsigned short src_port;		// Source port
