@@ -24,7 +24,8 @@ static pthread_t h_wire, h_wireless;
 static int i_packet = 0;
 
 /* Protocol based global variables */
-static ethernet_header eh;
+static ethernet_header eh_eth;
+static ethernet_header eh_wlan;
 
 
 /* Functions used */
@@ -46,8 +47,8 @@ int main() {
 	unsigned char wlan_src_addr[6] = { 0xec, 0x08, 0x6b, 0x08, 0x52, 0x19 };
 	unsigned char wlan_dst_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
 
-	ethernet_header eh_eth = create_eth_header(eth_src_addr, eth_dst_addr);
-	ethernet_header eh_wlan = create_eth_header(wlan_src_addr, wlan_dst_addr);
+	eh_eth = create_eth_header(eth_src_addr, eth_dst_addr);
+	eh_wlan = create_eth_header(wlan_src_addr, wlan_dst_addr);
 
 	for (int i = 0; i < 6; i++)
 		printf("%x ", eh_eth.src_address[i]);
