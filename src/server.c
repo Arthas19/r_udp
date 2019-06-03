@@ -24,8 +24,8 @@ static pthread_t h_wire, h_wireless;
 static int i_packet = 0;
 
 /* Protocol based global variables */
-static ethernet_header eh_eth;
-static ethernet_header eh_wlan;
+static ethernet_header eh_eth, eh_wlan;
+static ip_header ih_eth, ih_wlan;
 
 
 /* Functions used */
@@ -42,24 +42,25 @@ int main() {
 	//pthread_create(&h_wire, NULL, wire, 0);
 	//pthread_create(&h_wireless, NULL, wireless, 0);
 
-	unsigned char eth_src_addr[6]  = { 0x70, 0x85, 0xc2, 0x65, 0xe5, 0x25 };
-	unsigned char eth_dst_addr[6]  = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
-	unsigned char wlan_src_addr[6] = { 0xec, 0x08, 0x6b, 0x08, 0x52, 0x19 };
-	unsigned char wlan_dst_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
+	unsigned char eth_mac_src_addr[6]  = { 0x70, 0x85, 0xc2, 0x65, 0xe5, 0x25 };
+	unsigned char eth_mac_dst_addr[6]  = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
+	unsigned char wlan_mac_src_addr[6] = { 0xec, 0x08, 0x6b, 0x08, 0x52, 0x19 };
+	unsigned char wlan_mac_dst_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
 
-	eh_eth = create_eth_header(eth_src_addr, eth_dst_addr);
-	eh_wlan = create_eth_header(wlan_src_addr, wlan_dst_addr);
+	unsigned char ip_src_addr[4] = { 192, 168, 0, 13 };
+	unsigned char ip_dst_addr[4] = { 192, 168, 0, 11 };
 
-	for (int i = 0; i < 6; i++)
-		printf("%x ", eh_eth.src_address[i]);
+	eh_eth = create_eth_header(eth_mac_src_addr, eth_mac_dst_addr);
+	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
 
-	puts("");
-
-	for (int i = 0; i < 6; i++)
-		printf("%x ", eh_eth.dest_address[i]);
+	ih_eth = create_ip_header(0, ip_src_addr, ip_dst_addr);
+	ih_wlan = create_ip_header(0, ip_src_addr, ip_dst_addr);
 
 	puts("");
+	puts("");
 
+	printf("Checksum: %d\n", calc_ip_checksum(&ih_eth));
+	printf("Checksum: %d\n", csum(&ih_eth));
 
 	//pthread_join(h_wire, NULL);
 	//pthread_join(h_wireless, NULL);

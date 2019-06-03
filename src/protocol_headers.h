@@ -2,7 +2,7 @@
 #ifndef PROTOCOL_HEADERS_H
 #define PROTOCOL_HEADERS_H
 
-//#include <string.h>
+#include <string.h>
 #include <arpa/inet.h>
 
 // -----------------------------------------------------------------------------
@@ -16,27 +16,35 @@ typedef struct ethernet_header {
 	unsigned short type;				// Type of the next layer
 } ethernet_header;
 
-ethernet_header create_eth_header(unsigned char *, unsigned char *);
+ethernet_header create_eth_header(unsigned char *src_addr, unsigned char *dst_addr);
 
 // -----------------------------------------------------------------------------
 
 // IPv4 header
+
+#define FRAGMLESS 0x4000
+#define UDP       0x11
+#define TTL       0x11
+
 typedef struct ip_header {
 	unsigned char header_length :4;	// Internet header length (4 bits)
 	unsigned char version :4;		// Version (4 bits)
 	unsigned char tos;				// Type of service
 	unsigned short length;			// Total length
 	unsigned short identification;	// Identification
-	unsigned short fragm_flags :3;  // Flags (3 bits) & Fragment offset (13 bits)
-    unsigned short fragm_offset :13;// Flags (3 bits) & Fragment offset (13 bits)
+	unsigned short fragm;  			// Flags (3 bits) & Fragment offset (13 bits)
 	unsigned char ttl;				// Time to live
 	unsigned char next_protocol;	// Protocol of the next layer
 	unsigned short checksum;		// Header checksum
 	unsigned char src_addr[4];		// Source address
 	unsigned char dst_addr[4];		// Destination address
-	unsigned int options_padding;	// Option + Padding
-		// + variable part of the header
 } ip_header;
+
+ip_header create_ip_header(size_t data_size, unsigned char *src_addr, unsigned char *dst_addr);
+unsigned short calc_ip_checksum(ip_header *ih);
+unsigned short csum(ip_header *ih);
+
+// -----------------------------------------------------------------------------
 
 //UDP header
 typedef struct udp_header {
