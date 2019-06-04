@@ -59,8 +59,8 @@ int main() {
 	puts("");
 	puts("");
 
-	printf("Checksum: %d\n", calc_ip_checksum(&ih_eth));
-	printf("Checksum: %d\n", csum(&ih_eth));
+	printf("Checksum: %d\n", ih_eth.checksum);
+	printf("Fragm: %d\n", ih_eth.fragm);
 
 	//pthread_join(h_wire, NULL);
 	//pthread_join(h_wireless, NULL);

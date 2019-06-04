@@ -40,13 +40,13 @@ typedef struct ip_header {
 	unsigned char dst_addr[4];		// Destination address
 } ip_header;
 
-ip_header create_ip_header(size_t data_size, unsigned char *src_addr, unsigned char *dst_addr);
-unsigned short calc_ip_checksum(ip_header *ih);
-unsigned short csum(ip_header *ih);
+ip_header create_ip_header(size_t, unsigned char*, unsigned char*);
+unsigned short calc_ip_checksum(ip_header*);
 
 // -----------------------------------------------------------------------------
 
-//UDP header
+// UDP header
+
 typedef struct udp_header {
 	unsigned short src_port;		// Source port
 	unsigned short dest_port;		// Destination port
@@ -54,33 +54,22 @@ typedef struct udp_header {
 	unsigned short checksum;		// Header checksum
 } udp_header;
 
-typedef struct r_udp_header {
-	unsigned short src_port;
-	unsigned short dest_port;
-	unsigned short datagram_length;
-	unsigned short checksum;
+udp_header create_udp_header(unsigned short, unsigned short, unsigned short);
 
+// -----------------------------------------------------------------------------
+
+// R_UDP
+
+typedef struct r_udp_header {
 	// + 4 * 4 Byte-a -> 16 Byte-a EXTRA na UDP
-	unsigned int seq_num;
-	unsigned int ack_num;
-	unsigned int window_size;
-	unsigned int flags;
+	unsigned short seq_num;
+	unsigned short ack_num;
+	//unsigned short flags;
+	//unsigned short window_size;  // ???
 } r_udp_header;
 
-// TCP header
-typedef struct tcp_header {
-	unsigned short src_port;			// Source port
-	unsigned short dest_port;			// Destination port
-	unsigned int sequence_num;			// Sequence Number
-	unsigned int ack_num;				// Acknowledgement number
-	unsigned char reserved :4;			// Reserved for future use (4 bits)
-	unsigned char header_length :4;		// Header length (4 bits)
-	unsigned char flags;				// Packet flags
-	unsigned short windows_size;		// Window size
-	unsigned short checksum;			// Header Checksum
-	unsigned short urgent_pointer;		// Urgent pointer
-	// + variable part of the header
-} tcp_header;
+r_udp_header create_r_udp_header(unsigned short, unsigned short);
 
+// -----------------------------------------------------------------------------
 
 #endif
