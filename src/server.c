@@ -30,6 +30,8 @@ static udp_header uh_eth, uh_wlan;
 static r_udp_header ruh_eth, ruh_wlan;
 static packet pack_eth, pack_wlan;
 
+static unsigned char *ppack;
+
 /* Functions used */
 void* wire(void *param);
 void* wireless(void *param);
@@ -40,9 +42,6 @@ int main() {
 
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
-
-	//pthread_create(&h_wire, NULL, wire, 0);
-	//pthread_create(&h_wireless, NULL, wireless, 0);
 
 	unsigned char eth_mac_src_addr[6]  = { 0x70, 0x85, 0xc2, 0x65, 0xe5, 0x25 };
 	unsigned char eth_mac_dst_addr[6]  = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
@@ -67,6 +66,8 @@ int main() {
 	unsigned char *data = "O";
 
 	pack_eth = create_packet(eh_eth, ih_eth, uh_eth, ruh_eth, data, 1);
+	ppack = (unsigned char*)&pack_eth;
+
 	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, data, 1);
 
 	puts("");
@@ -75,7 +76,10 @@ int main() {
 	//printf("Checksum: %d\n", ih_eth.checksum);
 	//printf("Fragm: %d\n", ih_eth.fragm);
 
-	//pthread_join(h_wire, NULL);
+	pthread_create(&h_wire, NULL, wire, 0);
+	//pthread_create(&h_wireless, NULL, wireless, 0);
+
+	pthread_join(h_wire, NULL);
 	//pthread_join(h_wireless, NULL);
 
 	pthread_mutex_destroy(&mutex);
@@ -125,9 +129,15 @@ void* wire(void *param) {
 		exit(-1);
     }
 
-	sem_post(&semaphore);
-	sleep(1);
-	sem_wait(&semaphore);
+	//sem_post(&semaphore);
+	//sleep(1);
+	//sem_wait(&semaphore);
+
+	while(1) {
+		pcap_sendpacket(wire_handler, ppack, sizeof(packet) + 1);
+		printf(". ");
+		//sleep(1);
+	}
 
 	pcap_freealldevs(devices);
 }
@@ -140,9 +150,9 @@ void* wireless(void *param) {
 
 
 	sem_wait(&semaphore);
+	printf("Error in pcap_findalldevs: %s\n", error_buffer);
 
 	if(pcap_findalldevs(&devices, error_buffer) == -1) {
-		printf("Error in pcap_findalldevs: %s\n", error_buffer);
 
 		exit(-1);
 	}
