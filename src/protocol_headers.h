@@ -78,13 +78,14 @@ r_udp_header create_r_udp_header(unsigned short, unsigned short);
 
 // FULL
 
-#define MAX_PAY 512
+#define MAX_PAY 4
 
 typedef struct packet_st {
 	ethernet_header eh;
 	ip_header ih;
 	udp_header uh;
 	r_udp_header ruh;
+	
 	unsigned char payload[MAX_PAY];
 } packet;
 
