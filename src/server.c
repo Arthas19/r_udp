@@ -13,7 +13,7 @@
 #define BUF 512
 
 /* Global variables */
-static FILE *in_file, *out_file;
+static FILE *in_file;
 static unsigned char *buffer;
 static size_t size;
 
@@ -26,6 +26,7 @@ static int i_packet = 0;
 /* Protocol based global variables */
 static ethernet_header eh_eth, eh_wlan;
 static ip_header ih_eth, ih_wlan;
+static udp_header uh
 
 
 /* Functions used */
@@ -53,14 +54,16 @@ int main() {
 	eh_eth = create_eth_header(eth_mac_src_addr, eth_mac_dst_addr);
 	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
 
-	ih_eth = create_ip_header(0, ip_src_addr, ip_dst_addr);
-	ih_wlan = create_ip_header(0, ip_src_addr, ip_dst_addr);
+	ih_eth = create_ip_header(1, ip_src_addr, ip_dst_addr);
+	ih_wlan = create_ip_header(1, ip_src_addr, ip_dst_addr);
+
+
 
 	puts("");
 	puts("");
 
-	printf("Checksum: %d\n", ih_eth.checksum);
-	printf("Fragm: %d\n", ih_eth.fragm);
+	//printf("Checksum: %d\n", ih_eth.checksum);
+	//printf("Fragm: %d\n", ih_eth.fragm);
 
 	//pthread_join(h_wire, NULL);
 	//pthread_join(h_wireless, NULL);

@@ -43,7 +43,7 @@ udp_header create_udp_header(unsigned short src_port,
     udp_header uh;
 
     uh.src_port = htons(src_port);
-    uh.dst_port = htons(dst_port);
+    uh.dest_port = htons(dst_port);
     uh.datagram_length = htons(sizeof(udp_header) +
                                sizeof(r_udp_header) +
                                data_size);
@@ -51,13 +51,32 @@ udp_header create_udp_header(unsigned short src_port,
     return uh;
 }
 
-r_udp_header create_r_udp_header(unsigned short seq, unsigned short ack) {
+r_udp_header create_r_udp_header(unsigned short seq,
+                                 unsigned short ack) {
     r_udp_header ruh;
 
     ruh.seq_num = seq;
     ruh.ack_num = ack;
 
     return ruh;
+}
+
+packet create_packet(ethernet_header eh,
+                     ip_header ih,
+                     udp_header uh,
+                     r_udp_header ruh
+                     unsigned char *data,
+                     size_t data_size) {
+    packet packet;
+
+    packet.eh = eh;
+    packet.ih = ih;
+    packet.uh = uh;
+    packet.ruh = ruh;
+
+    memcpy(packet.payload, data, data_size);
+
+    return packet;
 }
 
 unsigned short calc_ip_checksum(ip_header *ih) {
