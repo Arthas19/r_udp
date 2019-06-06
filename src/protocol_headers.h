@@ -25,6 +25,7 @@ ethernet_header create_eth_header(unsigned char *src_addr, unsigned char *dst_ad
 #define FRAGMLESS 0x4000
 #define UDP       0x11
 #define TTL       0x11
+#define ID        0x13
 
 typedef struct ip_header {
 	unsigned char header_length :4;	// Internet header length (4 bits)

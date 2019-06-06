@@ -19,11 +19,11 @@ ip_header create_ip_header(size_t data_size,
     ih.header_length = 5;   // optional part is removed
     ih.version = 4;         // IPv4
     ih.tos = 0;             // all set to default
-    ih.identification = 19; // not really necessary
     ih.length = htons(sizeof(ip_header) +
                       sizeof(udp_header) +
                       sizeof(r_udp_header) +
                       data_size);
+    ih.identification = htons(ID); // not really necessary
     ih.fragm = htons(FRAGMLESS);   // fragmentation is forbidden
     ih.ttl = TTL;
     ih.next_protocol = UDP;
@@ -31,7 +31,6 @@ ip_header create_ip_header(size_t data_size,
     memcpy(ih.src_addr, src_addr, 4);
     memcpy(ih.dst_addr, dst_addr, 4);
 
-    //ih.checksum = calc_ip_checksum(&ih);
     ih.checksum = htons(calc_ip_checksum(&ih));
 
     return ih;
