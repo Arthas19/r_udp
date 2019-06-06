@@ -64,7 +64,7 @@ r_udp_header create_r_udp_header(unsigned short seq,
 packet create_packet(ethernet_header eh,
                      ip_header ih,
                      udp_header uh,
-                     r_udp_header ruh
+                     r_udp_header ruh,
                      unsigned char *data,
                      size_t data_size) {
     packet packet;

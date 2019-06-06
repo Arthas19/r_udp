@@ -26,8 +26,9 @@ static int i_packet = 0;
 /* Protocol based global variables */
 static ethernet_header eh_eth, eh_wlan;
 static ip_header ih_eth, ih_wlan;
-static udp_header uh
-
+static udp_header uh_eth, uh_wlan;
+static r_udp_header ruh_eth, ruh_wlan;
+static packet pack_eth, pack_wlan;
 
 /* Functions used */
 void* wire(void *param);
@@ -57,7 +58,16 @@ int main() {
 	ih_eth = create_ip_header(1, ip_src_addr, ip_dst_addr);
 	ih_wlan = create_ip_header(1, ip_src_addr, ip_dst_addr);
 
+	uh_eth = create_udp_header(SRC_PORT, DST_PORT, 1);
+	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, 1);
 
+	ruh_eth = create_r_udp_header(0, 0);
+	ruh_wlan = create_r_udp_header(0, 0);
+
+	unsigned char *data = "O";
+
+	pack_eth = create_packet(eh_eth, ih_eth, uh_eth, ruh_eth, data, 1);
+	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, data, 1);
 
 	puts("");
 	puts("");
