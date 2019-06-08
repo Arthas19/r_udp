@@ -22,20 +22,13 @@ static pthread_t h_wire, h_wireless;
 
 static int i_packet = 0;
 
-//rpi
-//eth0  11
-//wlan0 10
-
-//pc
-//eth0  14
-//wlan0 12
-
-static unsigned char filter[] = "udp";
+static unsigned char filter[] = "ip src host 192.168.0.15";
 
 /* Functions used */
 void* wire(void *param);
 void* wireless(void *param);
 pcap_if_t* select_device(pcap_if_t* devices);
+void packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
 
 
 int main() {
@@ -121,22 +114,7 @@ void* wire(void *param) {
 
 	pcap_freealldevs(devices);
 
-	int res;
-	unsigned char *data;
-
-	while((res = pcap_next_ex(wire_handler, &packet_header, &packet_data)) >= 0) {
-
-		if (res == 0) continue;
-
-		data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
-
-		printf("%c ", data[0]);
-
-		if (res < 0) {
-			printf("ERROR\n");
-			break;
-		}
-	}
+	pcap_loop(wire_handler, 10, packet_handler, NULL);
 }
 
 void* wireless(void *param) {
@@ -208,26 +186,9 @@ void* wireless(void *param) {
 
     printf("\nListening on %s...\n", device->name);
 
-	while((pcap_next_ex(wireless_handler, &packet_header, &packet_data)) >= 0) {
-		ethernet_header *eh;
-		ip_header *ih;
-		udp_header *uh;
-		r_udp_header *ruh;
-		unsigned char *data;
-
-		int ip_len;
-		int len;
-
-		eh = (ethernet_header*)packet_data;
-		ih = (ip_header*)(packet_data + sizeof(ethernet_header));
-		ip_len = ih->header_length*4;
-		uh = (udp_header*)(ih + ip_len);
-		data = (unsigned char*)(uh + sizeof(udp_header) + sizeof(r_udp_header));
-
-		printf("%c ", *data);
-	}
-
 	pcap_freealldevs(devices);
+
+	pcap_loop(wireless_handler, 1, packet_handler, NULL);
 }
 
 // This function provide possibility to chose device from the list of available devices
@@ -263,4 +224,15 @@ pcap_if_t* select_device(pcap_if_t* devices) {
     for(device = devices, i = 0; i < device_num-1; device=device->next, i++);
 
 	return device;
+}
+
+void packet_handler(unsigned char* param,
+					const struct pcap_pkthdr* packet_header,
+					const unsigned char* packet_data) {
+
+	unsigned char *data;
+
+	data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
+
+	printf("%c - %ld", data[0], sizeof(packet_data));
 }

@@ -85,7 +85,7 @@ typedef struct packet_st {
 	ip_header ih;
 	udp_header uh;
 	r_udp_header ruh;
-	
+
 	unsigned char payload[MAX_PAY];
 } packet;
 
