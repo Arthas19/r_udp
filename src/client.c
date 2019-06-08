@@ -6,18 +6,31 @@
 #include <semaphore.h>
 
 #include <unistd.h>
+#include <netinet/in.h>
+
+#include "protocol_headers.h"
 
 #define BUF 512
 
 
 /* Global variables */
-static FILE *in_file, *out_file;
+static FILE *out_file;
 
 static sem_t semaphore;
 static pthread_mutex_t mutex;
 static pthread_t h_wire, h_wireless;
 
 static int i_packet = 0;
+
+//rpi
+//eth0  11
+//wlan0 10
+
+//pc
+//eth0  14
+//wlan0 12
+
+static unsigned char filter[] = "ip src host 192.168.0.10";
 
 
 /* Functions used */
@@ -33,35 +46,10 @@ int main() {
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
 
-	pthread_create(&h_wire, NULL, wire, 0);
+	//pthread_create(&h_wire, NULL, wire, 0);
 	pthread_create(&h_wireless, NULL, wireless, 0);
 
-	if ((in_file = fopen("in_file.png", "rb")) == NULL ) {
-		fprintf(stderr, "%s\n", "Unable to open \"in_file.png\"");
-		return EXIT_FAILURE;
-	}
-
-	if ((out_file = fopen("out_file.png", "wb")) == NULL) {
-		fprintf(stderr, "%s\n", "Unable to open \"out_file.png\"");
-		return EXIT_FAILURE;
-	}
-
-	while ( fread(buffer, BUF, 1, in_file) ) {
-		fwrite(buffer, BUF, 1, out_file);
-		memset(buffer, '\0', BUF);
-	}
-
-	if (fclose(in_file) != 0) {
-		fprintf(stderr, "%s\n", "Unable to close \"i_file.png\"");
-		return EXIT_FAILURE;
-	}
-
-	if (fclose(out_file) != 0) {
-		fprintf(stderr, "%s\n", "Unable to close \"o_file.png\"");
-		return EXIT_FAILURE;
-	}
-
-	pthread_join(h_wire, NULL);
+	//pthread_join(h_wire, NULL);
 	pthread_join(h_wireless, NULL);
 
 	pthread_mutex_destroy(&mutex);
@@ -71,15 +59,18 @@ int main() {
 }
 
 void* wire(void *param) {
-	pcap_t* device_handle;
+	pcap_t *wire_handler;
 	pcap_if_t *device, *devices;
 
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
+	unsigned int netmask;
+	struct bpf_program fcode;
 
 	if(pcap_findalldevs(&devices, error_buffer) == -1)
 	{
 		printf("Error in pcap_findalldevs: %s\n", error_buffer);
-		return NULL;
+
+		exit(-1);
 	}
 
 	printf("%s\n", "WIRE:");
@@ -90,17 +81,13 @@ void* wire(void *param) {
 		pcap_freealldevs(devices);
 		sem_post(&semaphore);
 
-		return NULL;
+		exit(-1);
 	}
 
 	printf("SELECTED: %s\n\n", device->name);
 
-	sem_post(&semaphore);
-	sleep(1);
-	sem_wait(&semaphore);
-
 	// Open the capture device
-	if ((device_handle = pcap_open_live( device->name,		// name of the device
+	if ((wire_handler = pcap_open_live( device->name,		// name of the device
 							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
 							  1,							// promiscuous mode
 							  500,							// read timeout
@@ -110,25 +97,42 @@ void* wire(void *param) {
 		printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
 		pcap_freealldevs(devices);
 
-		return NULL;
+		exit(-1);
+	}
+
+	// setting the filter
+	if (!device->addresses->netmask)
+		netmask = 0;
+	else
+		netmask = ((struct sockaddr_in *)(device->addresses->netmask))->sin_addr.s_addr;
+
+	if (pcap_compile(wire_handler, &fcode, filter, 1, netmask) < 0) {
+		printf("\nInvalid filter!\n");
+		exit(-1);
+	}
+
+	if (pcap_setfilter(wire_handler, &fcode) < 0) {
+		printf("\nUnable to set the filter!\n");
+		exit(-1);
 	}
 
 	pcap_freealldevs(devices);
 }
 
 void* wireless(void *param) {
-	pcap_t* device_handle;
+	pcap_t *wireless_handler;
 	pcap_if_t *device, *devices;
 
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
-
-
-	sem_wait(&semaphore);
+	unsigned int netmask;
+	struct bpf_program fcode;
+	struct pcap_pkthdr *packet_header;
+	const unsigned char *packet_data;
 
 	if(pcap_findalldevs(&devices, error_buffer) == -1) {
 		printf("Error in pcap_findalldevs: %s\n", error_buffer);
 
-		return NULL;
+		exit(-1);
 	}
 
 	printf("%s\n", "WIRELESS:");
@@ -137,17 +141,14 @@ void* wireless(void *param) {
 
 	if (device == NULL) {
 		pcap_freealldevs(devices);
-		sem_post(&semaphore);
 
-		return NULL;
+		exit(-1);
 	}
 
 	printf("SELECTED: %s\n\n", device->name);
 
-	sem_post(&semaphore);
-
 	// Open the capture device
-	if ((device_handle = pcap_open_live( device->name,		// name of the device
+	if ((wireless_handler = pcap_open_live( device->name,	// name of the device
 							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
 							  1,							// promiscuous mode
 							  500,							// read timeout
@@ -157,7 +158,53 @@ void* wireless(void *param) {
 		printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
 		pcap_freealldevs(devices);
 
-		return NULL;
+		exit(-1);
+	}
+
+	// Check the link layer. We support only Ethernet for simplicity.
+	if(pcap_datalink(wireless_handler) != DLT_EN10MB) {
+		printf("\nThis program works only on Ethernet networks.\n");
+
+		exit(-1);
+	}
+
+	// setting the filter
+	if (!device->addresses->netmask)
+		netmask = 0;
+	else
+		netmask = ((struct sockaddr_in *)(device->addresses->netmask))->sin_addr.s_addr;
+
+	if (pcap_compile(wireless_handler, &fcode, filter, 1, netmask) < 0) {
+		printf("\nInvalid filter!\n");
+
+	 	exit(-1);
+	}
+
+	if (pcap_setfilter(wireless_handler, &fcode) < 0) {
+		printf("\nUnable to set the filter!\n");
+
+		exit(-1);
+	}
+
+    printf("\nListening on %s...\n", device->name);
+
+	while((pcap_next_ex(wireless_handler, &packet_header, &packet_data)) >= 0) {
+		ethernet_header *eh;
+		ip_header *ih;
+		udp_header *uh;
+		r_udp_header *ruh;
+		unsigned char *data;
+
+		int ip_len;
+		int len;
+
+		eh = (ethernet_header*)packet_data;
+		ih = (ip_header*)(packet_data + sizeof(ethernet_header));
+		ip_len = ih->header_length*4;
+		uh = (udp_header*)(ih + ip_len);
+		data = (unsigned char*)(uh + sizeof(udp_header) + sizeof(r_udp_header));
+
+		printf("%c ", *data);
 	}
 
 	pcap_freealldevs(devices);
