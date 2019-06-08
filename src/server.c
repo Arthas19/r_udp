@@ -56,24 +56,22 @@ int main() {
 	unsigned char wlan_ip_dst_addr[4] = { 192, 168, 0, 10 };
 
 	eh_eth = create_eth_header(eth_mac_src_addr, eth_mac_dst_addr);
-	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
-
 	ih_eth = create_ip_header(1, eth_ip_src_addr, eth_ip_dst_addr);
-	ih_wlan = create_ip_header(1, wlan_ip_src_addr, wlan_ip_dst_addr);
-
 	uh_eth = create_udp_header(SRC_PORT, DST_PORT, 1);
-	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, 1);
-
 	ruh_eth = create_r_udp_header(0, 0);
+
+	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
+	ih_wlan = create_ip_header(1, wlan_ip_src_addr, wlan_ip_dst_addr);
+	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, 1);
 	ruh_wlan = create_r_udp_header(0, 0);
 
 	unsigned char *data = "O";
 
 	pack_eth = create_packet(eh_eth, ih_eth, uh_eth, ruh_eth, data, 1);
-	ppack = (unsigned char*)&pack_eth;
+	//ppack = (unsigned char*)&pack_eth;
 
 	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, data, 1);
-//	ppack = (unsigned char*)&pack_wlan;
+	ppack = (unsigned char*)&pack_wlan;
 
 
 	puts("");
