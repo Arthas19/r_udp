@@ -47,13 +47,13 @@ int main() {
 	unsigned char eth_mac_src_addr[6]  = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
 	unsigned char wlan_mac_src_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
 	unsigned char eth_ip_src_addr[4] = { 192, 168, 0, 11 };
-	unsigned char wlan_ip_src_addr[4] = { 192, 168, 0, 10 };
+	unsigned char wlan_ip_src_addr[4] = { 192, 168, 0, 15 };
 
 	//PC
 	unsigned char eth_mac_dst_addr[6]  = { 0x70, 0x85, 0xc2, 0x65, 0xe5, 0x25 };
 	unsigned char wlan_mac_dst_addr[6] = { 0xec, 0x08, 0x6b, 0x08, 0x52, 0x19 };
-	unsigned char eth_ip_dst_addr[4] = { 192, 168, 0, 14 };
-	unsigned char wlan_ip_dst_addr[4] = { 192, 168, 0, 12 };
+	unsigned char eth_ip_dst_addr[4] = { 192, 168, 0, 12 };
+	unsigned char wlan_ip_dst_addr[4] = { 192, 168, 0, 10 };
 
 	eh_eth = create_eth_header(eth_mac_src_addr, eth_mac_dst_addr);
 	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
@@ -73,6 +73,8 @@ int main() {
 	ppack = (unsigned char*)&pack_eth;
 
 	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, data, 1);
+//	ppack = (unsigned char*)&pack_wlan;
+
 
 	puts("");
 	puts("");
