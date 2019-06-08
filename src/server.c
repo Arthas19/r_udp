@@ -60,8 +60,8 @@ int main() {
 	eh_eth = create_eth_header(eth_mac_src_addr, eth_mac_dst_addr);
 	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
 
-	ih_eth = create_ip_header(1, ip_src_addr, ip_dst_addr);
-	ih_wlan = create_ip_header(1, ip_src_addr, ip_dst_addr);
+	ih_eth = create_ip_header(1, eth_ip_src_addr, eth_ip_dst_addr);
+	ih_wlan = create_ip_header(1, wlan_ip_src_addr, wlan_ip_dst_addr);
 
 	uh_eth = create_udp_header(SRC_PORT, DST_PORT, 1);
 	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, 1);
