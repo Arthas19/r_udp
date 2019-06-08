@@ -32,7 +32,6 @@ static int i_packet = 0;
 
 static unsigned char filter[] = "udp";
 
-
 /* Functions used */
 void* wire(void *param);
 void* wireless(void *param);
@@ -120,25 +119,24 @@ void* wire(void *param) {
 
 	printf("\nListening on %s...\n", device->name);
 
-	while((pcap_next_ex(wire_handler, &packet_header, &packet_data)) >= 0) {
-		ethernet_header *eh;
-		ip_header *ih;
-		udp_header *uh;
-		unsigned char *data;
-
-		int ip_len;
-		int len;
-
-		eh = (ethernet_header*)packet_data;
-		ih = (ip_header*)(packet_data + sizeof(ethernet_header));
-		ip_len = ih->header_length*4;
-		uh = (udp_header*)(ih + 20);
-		data = (unsigned char*)(uh + sizeof(udp_header) + sizeof(r_udp_header));
-
-		printf("%c ", *data);
-	}
-
 	pcap_freealldevs(devices);
+
+	int res;
+	unsigned char *data;
+
+	while((res = pcap_next_ex(wire_handler, &packet_header, &packet_data)) >= 0) {
+
+		if (res == 0) continue;
+
+		data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
+
+		printf("%c ", data[0]);
+
+		if (res < 0) {
+			printf("ERROR\n");
+			break;
+		}
+	}
 }
 
 void* wireless(void *param) {

@@ -140,7 +140,8 @@ void* wire(void *param) {
 		exit(-1);
 	}
 
-	for(int i=0; i < 10; i++) {
+	//for(int i=0; i < 10; i++) {
+	while(1) {
 		pcap_sendpacket(wire_handler, ppack, sizeof(packet) + 1);
 		printf(". ");
 	}
