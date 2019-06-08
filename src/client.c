@@ -30,7 +30,7 @@ static int i_packet = 0;
 //eth0  14
 //wlan0 12
 
-static unsigned char filter[] = "ip src host 192.168.0.10";
+static unsigned char filter[] = "udp";
 
 
 /* Functions used */
@@ -46,11 +46,11 @@ int main() {
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
 
-	//pthread_create(&h_wire, NULL, wire, 0);
-	pthread_create(&h_wireless, NULL, wireless, 0);
+	pthread_create(&h_wire, NULL, wire, 0);
+	//pthread_create(&h_wireless, NULL, wireless, 0);
 
-	//pthread_join(h_wire, NULL);
-	pthread_join(h_wireless, NULL);
+	pthread_join(h_wire, NULL);
+	//pthread_join(h_wireless, NULL);
 
 	pthread_mutex_destroy(&mutex);
 	sem_destroy(&semaphore);
@@ -65,6 +65,8 @@ void* wire(void *param) {
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
 	unsigned int netmask;
 	struct bpf_program fcode;
+	struct pcap_pkthdr *packet_header;
+	const unsigned char *packet_data;
 
 	if(pcap_findalldevs(&devices, error_buffer) == -1)
 	{
@@ -114,6 +116,26 @@ void* wire(void *param) {
 	if (pcap_setfilter(wire_handler, &fcode) < 0) {
 		printf("\nUnable to set the filter!\n");
 		exit(-1);
+	}
+
+	printf("\nListening on %s...\n", device->name);
+
+	while((pcap_next_ex(wire_handler, &packet_header, &packet_data)) >= 0) {
+		ethernet_header *eh;
+		ip_header *ih;
+		udp_header *uh;
+		unsigned char *data;
+
+		int ip_len;
+		int len;
+
+		eh = (ethernet_header*)packet_data;
+		ih = (ip_header*)(packet_data + sizeof(ethernet_header));
+		ip_len = ih->header_length*4;
+		uh = (udp_header*)(ih + 20);
+		data = (unsigned char*)(uh + sizeof(udp_header) + sizeof(r_udp_header));
+
+		printf("%c ", *data);
 	}
 
 	pcap_freealldevs(devices);
