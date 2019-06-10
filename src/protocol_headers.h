@@ -78,7 +78,7 @@ r_udp_header create_r_udp_header(unsigned short, unsigned short);
 
 // FULL
 
-#define MAX_PAY 4
+#define MAX_PAY 512
 
 typedef struct packet_st {
 	ethernet_header eh;
