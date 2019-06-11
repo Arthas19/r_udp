@@ -23,7 +23,7 @@ static pthread_t h_wire, h_wireless;
 
 static int i_packet = 0;
 
-static unsigned char filter[] = "ip src host 192.168.0.15";
+static unsigned char filter[] = "ip src host 192.168.0.11";
 
 /* Functions used */
 void* wire(void *param);
@@ -49,6 +49,8 @@ int main() {
 
 	pthread_mutex_destroy(&mutex);
 	sem_destroy(&semaphore);
+
+	fclose(out_file);
 
 	return EXIT_SUCCESS;
 }
@@ -87,7 +89,7 @@ void* wire(void *param) {
 	if ((wire_handler = pcap_open_live( device->name,		// name of the device
 							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
 							  1,							// promiscuous mode
-							  500,							// read timeout
+							  1,							// read timeout
 							  error_buffer					// buffer where error message is stored
 							  )) == NULL)
 	{

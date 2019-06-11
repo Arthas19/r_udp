@@ -82,6 +82,8 @@ int main() {
 	pthread_mutex_destroy(&mutex);
 	sem_destroy(&semaphore);
 
+	fclose(in_file);
+
 	free(buffer);
 
 	return EXIT_SUCCESS;
