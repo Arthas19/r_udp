@@ -119,7 +119,7 @@ void* wire(void *param) {
 
 	pcap_freealldevs(devices);
 
-	pcap_loop(wire_handler, 10, packet_handler, NULL);
+	pcap_loop(wire_handler, 453, packet_handler, NULL);
 }
 
 void* wireless(void *param) {
@@ -247,5 +247,6 @@ void packet_handler(unsigned char* param,
 	data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
 	write_to_file(out_file, data, size, offset);
 
-	printf("%ld ", size);
+	printf("%ld\n", size);
+	printf("%ld\n", offset);
 }

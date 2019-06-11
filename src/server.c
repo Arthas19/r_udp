@@ -118,7 +118,7 @@ void* wire(void *param) {
     if ((wire_handler = pcap_open_live( device->name,		// name of the device
                               65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
                               1,							// promiscuous mode
-                              500,							// read timeout
+                              1,							// read timeout
 							  error_buffer					// buffer where error message is stored
 							  )) == NULL)
     {
@@ -148,6 +148,14 @@ void* wire(void *param) {
 		pcap_sendpacket(wire_handler, ppack, sizeof(packet) + MAX_PAY);
 		printf(". ");
 	}
+
+	ruh_wlan = create_r_udp_header(452, 0);
+	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+452*MAX_PAY, size - 452*MAX_PAY);
+	ppack = (unsigned char*)&pack_wlan;
+
+	pcap_sendpacket(wire_handler, ppack, sizeof(packet) + size-452*MAX_PAY);
+
+	printf("%ld\n", size-452*MAX_PAY);
 
 	pcap_freealldevs(devices);
 }
