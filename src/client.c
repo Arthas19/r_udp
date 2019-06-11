@@ -245,5 +245,5 @@ void packet_handler(unsigned char* param,
 	data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
 	write_to_file(out_file, data, size, offset);
 
-	printf("%c - %ld", data[0], sizeof(packet_data));
+	printf(". ");
 }
