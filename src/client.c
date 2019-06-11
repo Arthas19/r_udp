@@ -36,7 +36,7 @@ int main() {
 
 	unsigned char buffer[BUF];
 
-	out_file = fopen("out_file.png", "wb");
+	out_file = fopen("../out_file.png", "wb");
 
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
