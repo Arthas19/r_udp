@@ -149,13 +149,18 @@ void* wire(void *param) {
 		printf(". ");
 	}
 
+	size_t x = size - 452*MAX_PAY;
+
+	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
+	ih_wlan = create_ip_header(x, wlan_ip_src_addr, wlan_ip_dst_addr);
+	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
 	ruh_wlan = create_r_udp_header(452, 0);
-	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+452*MAX_PAY, size - 452*MAX_PAY);
+	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+452*MAX_PAY, x);
 	ppack = (unsigned char*)&pack_wlan;
 
-	pcap_sendpacket(wire_handler, ppack, sizeof(packet) + size-452*MAX_PAY);
+	pcap_sendpacket(wire_handler, ppack, sizeof(packet) + x);
 
-	printf("%ld\n", size-452*MAX_PAY);
+	printf("%ld\n", x);
 
 	pcap_freealldevs(devices);
 }
