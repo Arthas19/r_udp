@@ -36,7 +36,7 @@ int main() {
 
 	unsigned char buffer[BUF];
 
-	out_file = fopen("../out_file.png", "wb");
+	out_file = fopen("../out_file.png", "a+");
 
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
@@ -119,7 +119,7 @@ void* wire(void *param) {
 
 	pcap_freealldevs(devices);
 
-	pcap_loop(wire_handler, 453, packet_handler, NULL);
+	pcap_loop(wire_handler, 452, packet_handler, NULL);
 }
 
 void* wireless(void *param) {
