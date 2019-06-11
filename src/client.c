@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 
 #include "protocol_headers.h"
+#include "file_io.c"
 
 #define BUF 512
 
@@ -34,6 +35,8 @@ void packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned ch
 int main() {
 
 	unsigned char buffer[BUF];
+
+	out_file = fopen("out_file.png", "wb");
 
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
@@ -230,9 +233,17 @@ void packet_handler(unsigned char* param,
 					const struct pcap_pkthdr* packet_header,
 					const unsigned char* packet_data) {
 
+	size_t size, offset;
+
+	udp_header *uh = (udp_header*)(packet_data + sizeof(ethernet_header) + 20);
+	r_udp_header *ruh = (r_udp_header*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header));
 	unsigned char *data;
 
+	size = ntohs(uh->datagram_length) - sizeof(udp_header) - sizeof(r_udp_header);
+	offset = ntohs(ruh->seq_num);
+
 	data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
+	write_to_file(out_file, data, size, offset);
 
 	printf("%c - %ld", data[0], sizeof(packet_data));
 }

@@ -73,9 +73,6 @@ int main() {
 	puts("");
 	puts("");
 
-	//printf("Checksum: %d\n", ih_eth.checksum);
-	//printf("Fragm: %d\n", ih_eth.fragm);
-
 	pthread_create(&h_wire, NULL, wire, 0);
 	//pthread_create(&h_wireless, NULL, wireless, 0);
 
@@ -139,9 +136,10 @@ void* wire(void *param) {
 	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
 	ih_wlan = create_ip_header(MAX_PAY, wlan_ip_src_addr, wlan_ip_dst_addr);
 	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
-	ruh_wlan = create_r_udp_header(0, 0);
 
 	for(int i=0; i < 452; i++) {
+		ruh_wlan = create_r_udp_header(i, 0);
+
 		pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+i*MAX_PAY, MAX_PAY);
 		ppack = (unsigned char*)&pack_wlan;
 

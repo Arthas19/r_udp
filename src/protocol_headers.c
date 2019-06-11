@@ -54,8 +54,8 @@ r_udp_header create_r_udp_header(unsigned short seq,
                                  unsigned short ack) {
     r_udp_header ruh;
 
-    ruh.seq_num = seq;
-    ruh.ack_num = ack;
+    ruh.seq_num = htons(seq);
+    ruh.ack_num = htons(ack);
 
     return ruh;
 }

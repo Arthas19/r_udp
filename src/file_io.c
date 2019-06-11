@@ -18,6 +18,7 @@ size_t load_file(FILE *file, unsigned char **buffer) {
     return size;
 }
 
-void write_file(FILE *file, unsigned char *buffer, size_t size) {
+void write_to_file(FILE *file, unsigned char *buffer, size_t size, size_t offset) {
+    fseek(file, offset, SEEK_SET);
     fwrite(buffer, 1, size, file);
 }
