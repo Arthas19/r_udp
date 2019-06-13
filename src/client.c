@@ -18,7 +18,7 @@ static sem_t semaphore;
 static pthread_mutex_t mutex;
 static pthread_t h_wire, h_wireless;
 
-static unsigned char filter[] = "ip src host 10.81.35.53";
+static unsigned char filter[] = "ip src host 10.81.31.51";
 
 
 /* Functions used */

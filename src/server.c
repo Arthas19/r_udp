@@ -30,7 +30,7 @@ static packet pack_eth, pack_wlan;
 //RPI
 static unsigned char eth_mac_src_addr[6] = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
 static unsigned char wlan_mac_src_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
-static unsigned char eth_ip_src_addr[4] = { 10, 81, 31, 31 }; // menjati
+static unsigned char eth_ip_src_addr[4] = { 10, 81, 31, 51 }; // menjati
 static unsigned char wlan_ip_src_addr[4] = { 192, 168, 0, 11 }; // menjati
 
 //PC
