@@ -21,8 +21,6 @@ static sem_t semaphore;
 static pthread_mutex_t mutex;
 static pthread_t h_wire, h_wireless;
 
-static int i_packet = 0;
-
 /* Protocol based global variables */
 static ethernet_header eh_eth, eh_wlan;
 static ip_header ih_eth, ih_wlan;
@@ -35,13 +33,13 @@ static unsigned char *ppack;
 //RPI
 static unsigned char eth_mac_src_addr[6] = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
 static unsigned char wlan_mac_src_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
-static unsigned char eth_ip_src_addr[4] = { 192, 168, 0, 10 };
+static unsigned char eth_ip_src_addr[4] = { 10, 81, 35, 53 };
 static unsigned char wlan_ip_src_addr[4] = { 192, 168, 0, 11 };
 
 //PC
-static unsigned char eth_mac_dst_addr[6]  = { 0x70, 0x85, 0xc2, 0x65, 0xe5, 0x25 };
+static unsigned char eth_mac_dst_addr[6]  = { 0x38, 0xd5, 0x47, 0xde, 0xea, 0xa2 };
 static unsigned char wlan_mac_dst_addr[6] = { 0xec, 0x08, 0x6b, 0x08, 0x52, 0x19 };
-static unsigned char eth_ip_dst_addr[4] = { 192, 168, 0, 12 };
+static unsigned char eth_ip_dst_addr[4] = { 10, 81, 35, 40 };
 static unsigned char wlan_ip_dst_addr[4] = { 192, 168, 0, 13 };
 
 /* Functions used */
@@ -61,16 +59,6 @@ int main() {
 
 	printf("%lf\n", (float)size/512);
 
-	eh_eth = create_eth_header(eth_mac_src_addr, eth_mac_dst_addr);
-	ih_eth = create_ip_header(1, eth_ip_src_addr, eth_ip_dst_addr);
-	uh_eth = create_udp_header(SRC_PORT, DST_PORT, 1);
-	ruh_eth = create_r_udp_header(0, 0);
-
-	//pack_eth = create_packet(eh_eth, ih_eth, uh_eth, ruh_eth, data, 1);
-	//ppack = (unsigned char*)&pack_eth;
-
-
-	puts("");
 	puts("");
 
 	pthread_create(&h_wire, NULL, wire, 0);
@@ -135,32 +123,25 @@ void* wire(void *param) {
 		exit(-1);
 	}
 
+	eh_eth = create_eth_header(eth_mac_src_addr, eth_mac_dst_addr);
+	ih_eth = create_ip_header(MAX_PAY, eth_ip_src_addr, eth_ip_dst_addr);
+	uh_eth = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
+
+	ruh_eth = create_r_udp_header(0, 0);
+
 	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
 	ih_wlan = create_ip_header(MAX_PAY, wlan_ip_src_addr, wlan_ip_dst_addr);
 	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
 
 	for(int i=0; i < 452; i++) {
-		ruh_wlan = create_r_udp_header(i, 0);
+		ruh_eth = create_r_udp_header(i, 0);
 
-		pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+i*MAX_PAY, MAX_PAY);
-		ppack = (unsigned char*)&pack_wlan;
+		pack_eth = create_packet(eh_eth, ih_eth, uh_eth, ruh_eth, buffer+i*MAX_PAY, MAX_PAY);
+		ppack = (unsigned char*)&pack_eth;
 
 		pcap_sendpacket(wire_handler, ppack, sizeof(packet) + MAX_PAY);
 		printf(". ");
 	}
-
-	size_t x = size - 452*MAX_PAY;
-
-	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
-	ih_wlan = create_ip_header(x, wlan_ip_src_addr, wlan_ip_dst_addr);
-	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
-	ruh_wlan = create_r_udp_header(452, 0);
-	pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+452*MAX_PAY, x);
-	ppack = (unsigned char*)&pack_wlan;
-
-	pcap_sendpacket(wire_handler, ppack, sizeof(packet) + x);
-
-	printf("%ld\n", x);
 
 	pcap_freealldevs(devices);
 }
@@ -201,6 +182,20 @@ void* wireless(void *param) {
 		pcap_freealldevs(devices);
 
 		exit(-1);
+	}
+
+	eh_wlan = create_eth_header(wlan_mac_src_addr, wlan_mac_dst_addr);
+	ih_wlan = create_ip_header(MAX_PAY, wlan_ip_src_addr, wlan_ip_dst_addr);
+	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
+
+	for(int i=0; i < 452; i++) {
+		ruh_wlan = create_r_udp_header(i, 0);
+
+		pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+i*MAX_PAY, MAX_PAY);
+		ppack = (unsigned char*)&pack_wlan;
+
+		pcap_sendpacket(wireless_handler, ppack, sizeof(packet) + MAX_PAY);
+		printf(". ");
 	}
 
 	pcap_freealldevs(devices);

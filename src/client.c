@@ -23,7 +23,7 @@ static pthread_t h_wire, h_wireless;
 
 static int i_packet = 0;
 
-static unsigned char filter[] = "ip src host 192.168.0.11";
+static unsigned char filter[] = "ip src host 10.81.35.53";
 
 /* Functions used */
 void* wire(void *param);
