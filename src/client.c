@@ -15,28 +15,29 @@
 
 
 /* Global variables */
-static FILE *out_file;
+static FILE *eth_out_file, *wlan_out_file;
 
 static sem_t semaphore;
 static pthread_mutex_t mutex;
 static pthread_t h_wire, h_wireless;
 
-static int i_packet = 0;
-
 static unsigned char filter[] = "ip src host 10.81.35.53";
+
 
 /* Functions used */
 void* wire(void *param);
 void* wireless(void *param);
 pcap_if_t* select_device(pcap_if_t* devices);
-void packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
+void eth_packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
+void wlan_packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
 
 
 int main() {
 
 	unsigned char buffer[BUF];
 
-	out_file = fopen("../out_file.png", "a+");
+	eth_out_file = fopen("../out_file.png", "a+");
+	wlan_out_file = fopen("../out_file.png", "a+");
 
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
@@ -50,7 +51,8 @@ int main() {
 	pthread_mutex_destroy(&mutex);
 	sem_destroy(&semaphore);
 
-	fclose(out_file);
+	fclose(eth_out_file);
+	fclose(wlan_out_file);
 
 	return EXIT_SUCCESS;
 }
@@ -119,7 +121,7 @@ void* wire(void *param) {
 
 	pcap_freealldevs(devices);
 
-	pcap_loop(wire_handler, 452, packet_handler, NULL);
+	pcap_loop(wire_handler, 452, eth_packet_handler, NULL);
 }
 
 void* wireless(void *param) {
@@ -193,7 +195,7 @@ void* wireless(void *param) {
 
 	pcap_freealldevs(devices);
 
-	pcap_loop(wireless_handler, 1, packet_handler, NULL);
+	pcap_loop(wireless_handler, 226, wlan_packet_handler, NULL);
 }
 
 // This function provide possibility to chose device from the list of available devices
@@ -231,7 +233,7 @@ pcap_if_t* select_device(pcap_if_t* devices) {
 	return device;
 }
 
-void packet_handler(unsigned char* param,
+void eth_packet_handler(unsigned char* param,
 					const struct pcap_pkthdr* packet_header,
 					const unsigned char* packet_data) {
 
@@ -245,7 +247,27 @@ void packet_handler(unsigned char* param,
 	offset = ntohs(ruh->seq_num);
 
 	data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
-	write_to_file(out_file, data, size, offset);
+	write_to_file(eth_out_file, data, size, offset);
+
+	printf("%ld\n", size);
+	printf("%ld\n", offset);
+}
+
+void wlan_packet_handler(unsigned char* param,
+						const struct pcap_pkthdr* packet_header,
+						const unsigned char* packet_data) {
+
+	size_t size, offset;
+
+	udp_header *uh = (udp_header*)(packet_data + sizeof(ethernet_header) + 20);
+	r_udp_header *ruh = (r_udp_header*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header));
+	unsigned char *data;
+
+	size = ntohs(uh->datagram_length) - sizeof(udp_header) - sizeof(r_udp_header);
+	offset = ntohs(ruh->seq_num);
+
+	data = (unsigned char*)(packet_data + sizeof(ethernet_header) + 20 + sizeof(udp_header) + sizeof(r_udp_header));
+	write_to_file(wlan_out_file, data, size, offset);
 
 	printf("%ld\n", size);
 	printf("%ld\n", offset);
