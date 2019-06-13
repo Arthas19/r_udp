@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <pcap.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -28,7 +27,7 @@ static udp_header uh_eth, uh_wlan;
 static r_udp_header ruh_eth, ruh_wlan;
 static packet pack_eth, pack_wlan;
 
-static unsigned char *ppack;
+//static unsigned char *ppack;
 
 //RPI
 static unsigned char eth_mac_src_addr[6] = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
@@ -83,6 +82,8 @@ void* wire(void *param) {
 
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
 
+	unsigned char *ppack;
+
 	if(pcap_findalldevs(&devices, error_buffer) == -1)
 	{
 		printf("Error in pcap_findalldevs: %s\n", error_buffer);
@@ -95,7 +96,6 @@ void* wire(void *param) {
 
 	if (device == NULL) {
 		pcap_freealldevs(devices);
-		sem_post(&semaphore);
 
 		exit(-1);
 	}
@@ -127,7 +127,8 @@ void* wire(void *param) {
 	ih_eth = create_ip_header(MAX_PAY, eth_ip_src_addr, eth_ip_dst_addr);
 	uh_eth = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
 
-	for(int i=0; i < 452; i++) {
+	//for(int i=0; i<226; i++) {
+	for(int i = 0; i < 452; i++) {
 		ruh_eth = create_r_udp_header(i, 0);
 
 		pack_eth = create_packet(eh_eth, ih_eth, uh_eth, ruh_eth, buffer+i*MAX_PAY, MAX_PAY);
@@ -145,6 +146,8 @@ void* wireless(void *param) {
 	pcap_if_t *device, *devices;
 
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
+
+	unsigned char *ppack;
 
 	if(pcap_findalldevs(&devices, error_buffer) == -1) {
 		printf("Error in pcap_findalldevs: %s\n", error_buffer);
@@ -212,6 +215,7 @@ pcap_if_t* select_device(pcap_if_t* devices) {
 
     if (i==0) {
         printf("\nNo interfaces found! Make sure WinPcap is installed.\n");
+
 		exit(-1);
     }
 
@@ -221,6 +225,7 @@ pcap_if_t* select_device(pcap_if_t* devices) {
 
     if(device_num < 1 || device_num > i) {
         printf("\nInterface number out of range.\n");
+
     	exit(-1);
     }
 

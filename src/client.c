@@ -1,11 +1,10 @@
-#include <pcap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pcap.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
-
-#include <unistd.h>
 #include <netinet/in.h>
 
 #include "protocol_headers.h"
@@ -25,9 +24,9 @@ static unsigned char filter[] = "ip src host 10.81.35.53";
 
 
 /* Functions used */
-void* wire(void *param);
-void* wireless(void *param);
-pcap_if_t* select_device(pcap_if_t* devices);
+void* wire(void *);
+void* wireless(void *);
+pcap_if_t* select_device(pcap_if_t*);
 void eth_packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
 void wlan_packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
 
@@ -89,11 +88,11 @@ void* wire(void *param) {
 
 	// Open the capture device
 	if ((wire_handler = pcap_open_live( device->name,		// name of the device
-							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
-							  1,							// promiscuous mode
-							  1,							// read timeout
-							  error_buffer					// buffer where error message is stored
-							  )) == NULL)
+							  			65536				// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
+							  			1,					// promiscuous mode
+							  			1,					// read timeout
+							  			error_buffer		// buffer where error message is stored
+							  			)) == NULL)
 	{
 		printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
 		pcap_freealldevs(devices);
@@ -121,6 +120,7 @@ void* wire(void *param) {
 
 	pcap_freealldevs(devices);
 
+	// 226 ~ 225
 	pcap_loop(wire_handler, 452, eth_packet_handler, NULL);
 }
 
@@ -154,11 +154,11 @@ void* wireless(void *param) {
 
 	// Open the capture device
 	if ((wireless_handler = pcap_open_live( device->name,	// name of the device
-							  65536,						// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
-							  1,							// promiscuous mode
-							  500,							// read timeout
-							  error_buffer					// buffer where error message is stored
-							  )) == NULL)
+							  				65536,			// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
+							  				1,				// promiscuous mode
+							  				500,			// read timeout
+							  				error_buffer	// buffer where error message is stored
+							  				)) == NULL)
 	{
 		printf("\nUnable to open the adapter. %s is not supported by libpcap/WinPcap\n", device->name);
 		pcap_freealldevs(devices);
@@ -234,8 +234,8 @@ pcap_if_t* select_device(pcap_if_t* devices) {
 }
 
 void eth_packet_handler(unsigned char* param,
-					const struct pcap_pkthdr* packet_header,
-					const unsigned char* packet_data) {
+						const struct pcap_pkthdr* packet_header,
+						const unsigned char* packet_data) {
 
 	size_t size, offset;
 
@@ -254,8 +254,8 @@ void eth_packet_handler(unsigned char* param,
 }
 
 void wlan_packet_handler(unsigned char* param,
-						const struct pcap_pkthdr* packet_header,
-						const unsigned char* packet_data) {
+						 const struct pcap_pkthdr* packet_header,
+						 const unsigned char* packet_data) {
 
 	size_t size, offset;
 
