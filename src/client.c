@@ -88,7 +88,7 @@ void* wire(void *param) {
 
 	// Open the capture device
 	if ((wire_handler = pcap_open_live( device->name,		// name of the device
-							  			65536				// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
+							  			65536,				// portion of the packet to capture (65536 guarantees that the whole packet will be captured on all the link layers)
 							  			1,					// promiscuous mode
 							  			1,					// read timeout
 							  			error_buffer		// buffer where error message is stored

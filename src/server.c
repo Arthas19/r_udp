@@ -87,7 +87,8 @@ void* wire(void *param) {
 	if(pcap_findalldevs(&devices, error_buffer) == -1)
 	{
 		printf("Error in pcap_findalldevs: %s\n", error_buffer);
-		return NULL;
+
+		exit(-1);
 	}
 
 	printf("%s\n", "WIRE:");
