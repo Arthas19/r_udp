@@ -30,13 +30,13 @@ static packet pack_eth, pack_wlan;
 //RPI
 static unsigned char eth_mac_src_addr[6] = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
 static unsigned char wlan_mac_src_addr[6] = { 0x00, 0x0f, 0x60, 0x04, 0x5d, 0xca };
-static unsigned char eth_ip_src_addr[4] = { 10, 81, 35, 53 }; // menjati
+static unsigned char eth_ip_src_addr[4] = { 10, 81, 31, 31 }; // menjati
 static unsigned char wlan_ip_src_addr[4] = { 192, 168, 0, 11 }; // menjati
 
 //PC
-static unsigned char eth_mac_dst_addr[6]  = { 0x38, 0xd5, 0x47, 0xde, 0xea, 0xa2 }; // menjati
+static unsigned char eth_mac_dst_addr[6]  = { 0x2c, 0x4d, 0x54, 0xcf, 0x3b, 0x88 }; // menjati
 static unsigned char wlan_mac_dst_addr[6] = { 0xec, 0x08, 0x6b, 0x08, 0x52, 0x19 };
-static unsigned char eth_ip_dst_addr[4] = { 10, 81, 35, 40 }; // menjati
+static unsigned char eth_ip_dst_addr[4] = { 10, 81, 31, 41 }; // menjati
 static unsigned char wlan_ip_dst_addr[4] = { 192, 168, 0, 13 }; // menjati
 
 /* Functions used */
