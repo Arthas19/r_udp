@@ -9,7 +9,6 @@
 #include "file_io.c"
 #include "protocol_headers.c"
 
-#define BUF 512
 
 /* Global variables */
 static FILE *in_file;
@@ -27,7 +26,6 @@ static udp_header uh_eth, uh_wlan;
 static r_udp_header ruh_eth, ruh_wlan;
 static packet pack_eth, pack_wlan;
 
-//static unsigned char *ppack;
 
 //RPI
 static unsigned char eth_mac_src_addr[6] = { 0xb8, 0x27, 0xeb, 0x73, 0x1e, 0xb2 };
@@ -42,13 +40,12 @@ static unsigned char eth_ip_dst_addr[4] = { 10, 81, 35, 40 }; // menjati
 static unsigned char wlan_ip_dst_addr[4] = { 192, 168, 0, 13 }; // menjati
 
 /* Functions used */
-void* wire(void *param);
-void* wireless(void *param);
-pcap_if_t* select_device(pcap_if_t* devices);
+void* wire(void*);
+void* wireless(void*);
+pcap_if_t* select_device(pcap_if_t*);
 
 
 int main() {
-
 	pthread_mutex_init(&mutex, NULL);
 	sem_init(&semaphore, 0, 0);
 
@@ -79,19 +76,16 @@ int main() {
 void* wire(void *param) {
 	pcap_t* wire_handler;
 	pcap_if_t *device, *devices;
-
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
-
 	unsigned char *ppack;
 
-	if(pcap_findalldevs(&devices, error_buffer) == -1)
-	{
+	if(pcap_findalldevs(&devices, error_buffer) == -1) {
 		printf("Error in pcap_findalldevs: %s\n", error_buffer);
 
 		exit(-1);
 	}
 
-	printf("%s\n", "WIRE:");
+	printf("WIRE:\n");
 
 	device = select_device(devices);
 
@@ -101,7 +95,7 @@ void* wire(void *param) {
 		exit(-1);
 	}
 
-	printf("SELECTED: %s\n\n", device->name);
+	printf("\nSELECTED: %s\n\n", device->name);
 
 	// Open the capture device
     if ((wire_handler = pcap_open_live( device->name,		// name of the device
@@ -117,8 +111,7 @@ void* wire(void *param) {
 		exit(-1);
     }
 
-	if(pcap_datalink(wire_handler) != DLT_EN10MB)
-	{
+	if(pcap_datalink(wire_handler) != DLT_EN10MB) {
 		printf("\nThis program works only on Ethernet networks.\n");
 
 		exit(-1);
@@ -128,7 +121,7 @@ void* wire(void *param) {
 	ih_eth = create_ip_header(MAX_PAY, eth_ip_src_addr, eth_ip_dst_addr);
 	uh_eth = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
 
-	//for(int i=0; i<226; i++) {
+	//for(int i = 0; i<226; i++) {
 	for(int i = 0; i < 452; i++) {
 		ruh_eth = create_r_udp_header(i, 0);
 
@@ -145,9 +138,7 @@ void* wire(void *param) {
 void* wireless(void *param) {
 	pcap_t* wireless_handler;
 	pcap_if_t *device, *devices;
-
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
-
 	unsigned char *ppack;
 
 	if(pcap_findalldevs(&devices, error_buffer) == -1) {
@@ -156,7 +147,7 @@ void* wireless(void *param) {
 		exit(-1);
 	}
 
-	printf("%s\n", "WIRELESS:");
+	printf("WIRELESS:\n");
 
 	device = select_device(devices);
 
@@ -166,7 +157,7 @@ void* wireless(void *param) {
 		exit(-1);
 	}
 
-	printf("SELECTED: %s\n\n", device->name);
+	printf("\nSELECTED: %s\n\n", device->name);
 
 	// Open the capture device
 	if ((wireless_handler = pcap_open_live( device->name,	// name of the device
@@ -186,7 +177,7 @@ void* wireless(void *param) {
 	ih_wlan = create_ip_header(MAX_PAY, wlan_ip_src_addr, wlan_ip_dst_addr);
 	uh_wlan = create_udp_header(SRC_PORT, DST_PORT, MAX_PAY);
 
-	for(int i=226; i < 452; i++) {
+	for(int i = 226; i < 452; i++) {
 		ruh_wlan = create_r_udp_header(i, 0);
 
 		pack_wlan = create_packet(eh_wlan, ih_wlan, uh_wlan, ruh_wlan, buffer+i*MAX_PAY, MAX_PAY);

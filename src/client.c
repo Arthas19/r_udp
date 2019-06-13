@@ -10,8 +10,6 @@
 #include "protocol_headers.h"
 #include "file_io.c"
 
-#define BUF 512
-
 
 /* Global variables */
 static FILE *eth_out_file, *wlan_out_file;
@@ -24,22 +22,19 @@ static unsigned char filter[] = "ip src host 10.81.35.53";
 
 
 /* Functions used */
-void* wire(void *);
-void* wireless(void *);
+void* wire(void*);
+void* wireless(void*);
 pcap_if_t* select_device(pcap_if_t*);
 void eth_packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
 void wlan_packet_handler(unsigned char*, const struct pcap_pkthdr*, const unsigned char*);
 
 
 int main() {
-
-	unsigned char buffer[BUF];
+	pthread_mutex_init(&mutex, NULL);
+	sem_init(&semaphore, 0, 0);
 
 	eth_out_file = fopen("../out_file.png", "a+");
 	wlan_out_file = fopen("../out_file.png", "a+");
-
-	pthread_mutex_init(&mutex, NULL);
-	sem_init(&semaphore, 0, 0);
 
 	pthread_create(&h_wire, NULL, wire, 0);
 	//pthread_create(&h_wireless, NULL, wireless, 0);
@@ -59,7 +54,6 @@ int main() {
 void* wire(void *param) {
 	pcap_t *wire_handler;
 	pcap_if_t *device, *devices;
-
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
 	unsigned int netmask;
 	struct bpf_program fcode;
@@ -73,7 +67,7 @@ void* wire(void *param) {
 		exit(-1);
 	}
 
-	printf("%s\n", "WIRE:");
+	printf("WIRE:\n");
 
 	device = select_device(devices);
 
@@ -84,7 +78,7 @@ void* wire(void *param) {
 		exit(-1);
 	}
 
-	printf("SELECTED: %s\n\n", device->name);
+	printf("\nSELECTED: %s\n\n", device->name);
 
 	// Open the capture device
 	if ((wire_handler = pcap_open_live( device->name,		// name of the device
@@ -120,14 +114,13 @@ void* wire(void *param) {
 
 	pcap_freealldevs(devices);
 
-	// 226 ~ 225
+	//                   226 ~ 225
 	pcap_loop(wire_handler, 452, eth_packet_handler, NULL);
 }
 
 void* wireless(void *param) {
 	pcap_t *wireless_handler;
 	pcap_if_t *device, *devices;
-
 	unsigned char error_buffer[PCAP_ERRBUF_SIZE];
 	unsigned int netmask;
 	struct bpf_program fcode;
@@ -140,7 +133,7 @@ void* wireless(void *param) {
 		exit(-1);
 	}
 
-	printf("%s\n", "WIRELESS:");
+	printf("WIRELESS:\n");
 
 	device = select_device(devices);
 
@@ -150,7 +143,7 @@ void* wireless(void *param) {
 		exit(-1);
 	}
 
-	printf("SELECTED: %s\n\n", device->name);
+	printf("\nSELECTED: %s\n\n", device->name);
 
 	// Open the capture device
 	if ((wireless_handler = pcap_open_live( device->name,	// name of the device
